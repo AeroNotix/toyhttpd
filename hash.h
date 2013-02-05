@@ -8,16 +8,24 @@
 
 #include <stdbool.h>
 
-struct HashMap;
-struct Value;
+struct Value {
+    char *key;
+    char *value;
+    struct Value *next;
+};
 
-struct HashMap *InitHashMap();
+struct HashMap {
+    int len;
+    struct Value **Values;
+};
+
+struct HashMap *hash_init();
 unsigned long hash(unsigned char *str);
-void Insert(struct HashMap *h, char* key, char* value);
-bool Contains(struct HashMap *h, char* key);
-char* Get(struct HashMap *h, char* key);
+void hash_insert(struct HashMap *h, char* key, char* value);
+bool hash_contains(struct HashMap *h, char* key);
+char* hash_get(struct HashMap *h, char* key);
 
-void ValueFree(struct Value *v);
-void HashFree(struct HashMap *h);
+void value_free(struct Value *v);
+void hash_free(struct HashMap *h);
 
 #endif /* __HASHMAP_H */

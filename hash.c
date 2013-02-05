@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#ifndef INITIAL_HASH_SIZE
+  #define INITIAL_HASH_SIZE 128
+#endif
+
 struct Value {
     char *key;
     char *value;
@@ -19,11 +23,6 @@ struct HashMap {
     struct Value **Values;
 };
 
-#ifndef INITIAL_HASH_SIZE
-  #define INITIAL_HASH_SIZE 128
-#endif
-
-
 unsigned long hash(char *str) {
     unsigned long hash = 5381;
     int c;
@@ -34,7 +33,7 @@ unsigned long hash(char *str) {
     return hash;
 }
 
-struct HashMap* InitHashMap() {
+struct HashMap* hash_init() {
     struct HashMap *h = malloc(sizeof(struct HashMap));
     if (h == NULL)
         return NULL;
@@ -44,7 +43,7 @@ struct HashMap* InitHashMap() {
     return h;
 }
 
-void Insert(struct HashMap *h, char* key, char* value) {
+void hash_insert(struct HashMap *h, char* key, char* value) {
     struct Value *slot = h->Values[hash(key) % INITIAL_HASH_SIZE];
     while (slot != NULL) {
         slot = slot->next;
@@ -56,7 +55,7 @@ void Insert(struct HashMap *h, char* key, char* value) {
     h->Values[hash(key) % INITIAL_HASH_SIZE] = slot;
 }
 
-bool Contains(struct HashMap *h, char* key) {
+bool hash_contains(struct HashMap *h, char* key) {
     struct Value *slot = h->Values[hash(key) % INITIAL_HASH_SIZE];
     if (slot == NULL)
         return false;
@@ -67,29 +66,25 @@ bool Contains(struct HashMap *h, char* key) {
     return !(slot == NULL || slot->value == NULL);
 }
 
-char* Get(struct HashMap *h, char* key) {
-    if (Contains(h, key)) {
-        struct Value *slot = h->Values[hash(key) % INITIAL_HASH_SIZE];
-        while (slot != NULL && strcmp(slot->key, key) != 0) {
-            slot = slot->next;
-        }
-        return slot->value;
-    } else {
-        return "";
+char* hash_get(struct HashMap *h, char* key) {
+    struct Value *slot = h->Values[hash(key) % INITIAL_HASH_SIZE];
+    while (slot != NULL && strcmp(slot->key, key) != 0) {
+        slot = slot->next;
     }
+    return slot->value;
 }
 
-void ValueFree(struct Value *v) {
+void value_free(struct Value *v) {
     if (v == NULL)
         return;
     if (v->next != NULL)
-        ValueFree(v->next);
+        value_free(v->next);
     free(v);
 }
 
-void HashFree(struct HashMap *h) {
+void hash_free(struct HashMap *h) {
     int x;
     for (x = 0; x < h->len; x++) {
-        ValueFree(h->Values[x]);
+        value_free(h->Values[x]);
     }
 }
