@@ -1,2 +1,2 @@
 all:
-	gcc -Wall -Wextra fileio.c server.c -o toyhttpd
+	gcc -Wall -Wextra hash.c fileio.c server.c -o toyhttpd

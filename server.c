@@ -7,7 +7,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "fileio.h"
+#include "hash.h"
 
 
 int socketlisten(int port) {
@@ -38,7 +40,6 @@ int main(void) {
     socklen_t len;
 	struct sockaddr_in6 claddr;
 	char buffer[1024];
-	memset(&buffer, 0, 1024);
 
 	/* Bind to our HTTP socket */
 	if ((sockfd = socketlisten( /* config */ 80)) == -1) {
@@ -49,6 +50,8 @@ int main(void) {
 	len = sizeof(struct sockaddr_in6);
 	/* Server loop */
 	while (1) {
+        /* clear the buffer between requests */
+        memset(&buffer, 0, 1024);
 		if ((conn = accept(sockfd, (struct sockaddr*) &claddr, &len)) < 0) {
 			perror("Error receiving on socket");
 			break;
