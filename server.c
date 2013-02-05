@@ -41,9 +41,10 @@ int main(void) {
     socklen_t len;
     struct sockaddr_in6 claddr;
     char buffer[1024];
+    struct HashMap* h;
 
     /* Bind to our HTTP socket */
-    if ((sockfd = socketlisten( /* config */ 80)) == -1) {
+    if ((sockfd = socketlisten( /* config */ 12345)) == -1) {
         perror("Couldn't connect to socket");
         exit(1);
     }
@@ -61,10 +62,17 @@ int main(void) {
             perror("Error receiving on socket");
             break;
         }
+
+        h = parse_header(buffer);
+        char *word;
+        if ((word = hash_get(h, "Accept")) != NULL) {
+            printf("%s\n", word);
+        }
         if (respond_with_file(conn, "server.c") < 0) {
             perror("Error sending on socket");
             break;
         }
+        hash_free(h);
     }
 
     if (close(sockfd) != 0) {

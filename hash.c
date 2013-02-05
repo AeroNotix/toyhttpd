@@ -13,9 +13,9 @@
 #endif
 
 struct Value {
+    struct Value *next;
     char *key;
     char *value;
-    struct Value *next;
 };
 
 struct HashMap {
@@ -27,7 +27,7 @@ unsigned long hash(char *str) {
     unsigned long hash = 5381;
     int c;
 
-    while ((c = *str++)) {
+    while ((c = *str++) != '\0') {
         hash = ((hash << 5) + hash) + c;
     }
     return hash;
@@ -49,8 +49,8 @@ void hash_insert(struct HashMap *h, char* key, char* value) {
         slot = slot->next;
     }
     slot = malloc(sizeof(struct Value));
-    slot->key = key;
-    slot->value = value;
+    slot->key = strdup(key);
+    slot->value = strdup(value);
     slot->next = NULL;
     h->Values[hash(key) % INITIAL_HASH_SIZE] = slot;
 }
@@ -77,8 +77,10 @@ char* hash_get(struct HashMap *h, char* key) {
 void value_free(struct Value *v) {
     if (v == NULL)
         return;
-    if (v->next != NULL)
+    if (v->next != NULL) {
+        printf("%p\n", v->next);
         value_free(v->next);
+    }
     free(v);
 }
 
@@ -87,4 +89,5 @@ void hash_free(struct HashMap *h) {
     for (x = 0; x < h->len; x++) {
         value_free(h->Values[x]);
     }
+    free(h);
 }
