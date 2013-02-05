@@ -5,6 +5,8 @@
 #ifndef __FILEIO_H
 #define __FILEIO_H
 
+#include <sys/types.h>
+
 off_t fsize(const char *filename);
 char *readfile(char *filename);
 char **listdir(char *dir);

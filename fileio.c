@@ -41,6 +41,7 @@ char *readfile(char *filename) {
     }
     while ((c = getc(f)) != EOF)
         *bufferp++ = c;
+    fclose(f);
     return buffer;
 }
 
@@ -81,7 +82,9 @@ int respond_with_file(int connfd, char* filename) {
     if ((filesize = fsize(filename)) == -1) {
         return -1;
     }
-    content = readfile(filename);
+    if ((content = readfile(filename)) == NULL) {
+        return -1;
+    }
     message_size += strlen(content);
     message_size += numlength(filesize);
 
