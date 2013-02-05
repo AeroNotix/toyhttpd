@@ -40,7 +40,6 @@ int main(void) {
     int sockfd, conn;
     socklen_t len;
     struct sockaddr_in6 claddr;
-    struct HashMap *h;
     char buffer[1024];
 
     /* Bind to our HTTP socket */
@@ -61,14 +60,6 @@ int main(void) {
         if (recv(conn, buffer, 1024, 0) < 0) {
             perror("Error receiving on socket");
             break;
-        }
-        h = parse_header(buffer);
-        hash_insert(h, "wut", "woah");
-        char *hashval;
-        if ((hashval = hash_get(h, "wut")) == NULL) {
-            printf("ERROR\n");
-        } else {
-            printf("%s\n", hashval);
         }
         if (respond_with_file(conn, "server.c") < 0) {
             perror("Error sending on socket");
