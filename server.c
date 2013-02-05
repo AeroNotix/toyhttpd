@@ -7,13 +7,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "fileio.h"
 
-off_t fsize(const char *filename) {
-	struct stat st;
-	if (stat(filename, &st) == 0)
-		return st.st_size;
-	return -1;
-}
 
 int socketlisten(int port) {
 	int sockfd;
@@ -38,56 +33,7 @@ int socketlisten(int port) {
 	return sockfd;
 }
 
-char *readfile(char *filename) {
-	int c;
-	FILE *f;
-	off_t filesize;
-	char *buffer;
-	char *bufferp;
-
-	if ((filesize = fsize(filename)) == -1)
-		return NULL;
-	buffer = malloc(sizeof(char) * filesize);
-	bufferp = buffer;
-	if ((f = fopen(filename, "r")) == NULL) {
-		fprintf(stderr, "Error opening file: %s", filename);
-		return;
-	}
-	while ((c = getc(f)) != EOF)
-		*bufferp++ = c;
-	return buffer;
-}
-
-char **listdir(char *dir) {
-	DIR *dp;
-	int length, x;
-	char **dirs;
-	struct dirent *ep;
-
-	dp = opendir(dir);
-	if (dp != NULL) {
-		dirs = malloc(sizeof(char*));
-		length = 0;
-		while (ep = readdir(dp)) {
-			dirs = realloc(dirs, sizeof(char*) * length + 1);
-			dirs[length++] = strdup(ep->d_name);
-		}
-		*(dirs + length) = NULL;
-		closedir(dp);
-		return dirs;
-	}
-	return NULL;
-}
-
-int respond_with_file(int connfd, char* filename) {
-	/* not implemented */
-	char *status = "HTTP/1.1 %d %s\n";
-	status = realloc(status, sizeof(char) * 45);
-	free(status);
-}
-
 int main(void) {
-	char **dirs = listdir(".");
 	int sockfd, numbytes, len, conn;
 	socklen_t clilen;
 	struct sockaddr_in6 claddr;
