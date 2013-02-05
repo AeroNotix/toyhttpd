@@ -34,8 +34,8 @@ int socketlisten(int port) {
 }
 
 int main(void) {
-	int sockfd, numbytes, len, conn;
-	socklen_t clilen;
+	int sockfd, conn;
+    socklen_t len;
 	struct sockaddr_in6 claddr;
 	char buffer[1024];
 	memset(&buffer, 0, 1024);

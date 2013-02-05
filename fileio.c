@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "fileio.h"
@@ -36,7 +37,7 @@ char *readfile(char *filename) {
     bufferp = buffer;
     if ((f = fopen(filename, "r")) == NULL) {
         fprintf(stderr, "Error opening file: %s", filename);
-        return;
+        return NULL;
     }
     while ((c = getc(f)) != EOF)
         *bufferp++ = c;
@@ -45,7 +46,7 @@ char *readfile(char *filename) {
 
 char **listdir(char *dir) {
     DIR *dp;
-    int length, x;
+    int length;
     char **dirs;
     struct dirent *ep;
 
@@ -53,7 +54,7 @@ char **listdir(char *dir) {
     if (dp != NULL) {
         dirs = malloc(sizeof(char*));
         length = 0;
-        while (ep = readdir(dp)) {
+        while ((ep = readdir(dp))) {
             dirs = realloc(dirs, sizeof(char*) * length + 1);
             dirs[length++] = strdup(ep->d_name);
         }
@@ -86,7 +87,7 @@ int respond_with_file(int connfd, char* filename) {
 
     /* 18 is the length of "Content-Length:\n" */
     content_length = malloc((18 + numlength(filesize)) * sizeof(char));
-    if (sprintf(content_length, "Content-Length:%d\n", filesize-1) == -1) {
+    if (sprintf(content_length, "Content-Length:%d\n", (int)filesize-1) == -1) {
         free(content_length);
         free(content);
         return -1;
@@ -100,7 +101,7 @@ int respond_with_file(int connfd, char* filename) {
         return -1;
     }
 
-    if (send(connfd, message, strlen(message)) == -1) {
+    if (send(connfd, message, strlen(message), 0) == -1) {
         free(content_length);
         free(content);
         free(message);
