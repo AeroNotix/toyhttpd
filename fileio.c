@@ -65,9 +65,46 @@ char **listdir(char *dir) {
 }
 
 int respond_with_file(int connfd, char* filename) {
-	/* not implemented */
-	char *status = "HTTP/1.1 %d %s\n";
-	status = realloc(status, sizeof(char) * 45);
-	free(status);
-}
+    long message_size;
+    char *message;
+    char *status;
+    char *content_length;
+    char *content;
+    off_t filesize;
 
+    message_size = 0;
+
+    status = "HTTP/1.1 200 OK\n";
+    message_size += strlen(status);
+
+    if ((filesize = fsize(filename)) == -1) {
+        return -1;
+    }
+    content = readfile(filename);
+    message_size += strlen(content);
+    message_size += numlength(filesize);
+
+    /* 18 is the length of "Content-Length:\n" */
+    content_length = malloc((18 + numlength(filesize)) * sizeof(char));
+    if (sprintf(content_length, "Content-Length:%d\n", filesize-1) == -1) {
+        free(content_length);
+        free(content);
+        return -1;
+    }
+    message_size += strlen(content_length);
+    message = malloc(message_size * sizeof(char));
+    if (sprintf(message, "%s%s\n%s", status, content_length, content) == -1) {
+        free(content_length);
+        free(content);
+        free(message);
+        return -1;
+    }
+
+    if (send(connfd, message, strlen(message)) == -1) {
+        free(content_length);
+        free(content);
+        free(message);
+        return -1;
+    }
+    return 0;
+}
