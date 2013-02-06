@@ -5,6 +5,14 @@
 #include "hash.h"
 
 char **strsplit(char *string, char sep, int *realcnt) {
+    /*
+      Will allocate `realcnt` strings. You need to clear this memory
+      yourself.
+
+      Will allocate an array to hold the strings in. You need to clear
+      this memory yourself.
+    */
+
     int x;
     int cnt;
 	int parts;
@@ -13,38 +21,60 @@ char **strsplit(char *string, char sep, int *realcnt) {
 	char **words;
 	char **wordscpy;
     char *strptr;
-    char *strptr2;
 
     strptr = string;
     parts = 1;
 
-	/* Tally up and malloc the maximum */
+	/* Tally up and malloc the maximum splits */
 	for (x = 0; *strptr; ++strptr, ++x) {
 		if (*strptr == sep) {
 			parts++;
         }
 	}
+
+    /* `x` will be the strlength if it's 0 then it's string is the
+       empty string */
+    if (x == 0) {
+        *realcnt = 0;
+        return NULL;
+    }
     
 	words = malloc(sizeof(char*) * parts);
 	if (words == NULL) {
 		return NULL;
 	}
+
+    /* If `parts` is still 1, it means the separator was not found */
+    if (parts == 1) {
+        *realcnt = 1;
+        *words = strdup(string);
+        return words;
+    }
+
     wordscpy = words;
     strptr = string;
     while(*strptr != '\0') {
         cnt = 0;
-        *words = malloc(sizeof(char));
         while(*strptr != sep && *strptr != '\0') {
+            if (cnt == 0) {
+                *words = malloc(sizeof(char));
+            }
             *words = realloc(*words, sizeof(char) * cnt+1);
             (*words)[cnt++] = *strptr++;
         }
         ++strptr;
-        (*words)[cnt] = '\0';
-        ++wordcnt;
-        ++words;
+        /* If cnt is greater than zero and we're here then it means
+           we've actually copied a string into *words. We need to
+           null terminate it and increment the word pointer. */
+        if (cnt > 0) {
+            (*words)[cnt] = '\0';
+            ++wordcnt;
+            ++words;
+        }
     }
-    *realcnt = parts;
-	return wordscpy;
+
+    *realcnt = wordcnt;
+    return wordscpy;
 }
 
 char **parse_key(char *header_pair) {
@@ -79,7 +109,7 @@ char **parse_key(char *header_pair) {
 
 void freewords(char **words, int cnt) {
     int x;
-    for (x = 0; x <= cnt; ++x) {
+    for (x = 0; x < cnt; ++x) {
         free(words[x]);
     }
     free(words);    
@@ -98,6 +128,7 @@ void parse_header(char* header, struct HashMap *h) {
         inner = 0;
         if ((subentries = strsplit(entries[x], ':', &inner)) != NULL) {
             if (inner < 2) {
+                freewords(subentries, inner);
                 continue;
             }
             hash_insert(h, subentries[0], subentries[1]);
