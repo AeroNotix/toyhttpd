@@ -38,8 +38,8 @@ int main(void) {
     int sockfd, conn;
     socklen_t len;
     struct sockaddr_in6 claddr;
-    char buffer[1024];
-    
+    char request_header[1024];
+
     /* Bind to our HTTP socket */
     if ((sockfd = socketlisten( /* config */ 12345)) == -1) {
         perror("Couldn't connect to socket");
@@ -50,19 +50,23 @@ int main(void) {
     /* Server loop */
     while (1) {
         /* clear the buffer between requests */
-        memset(&buffer, 0, 1024);
+        memset(&request_header, 0, 1024);
         if ((conn = accept(sockfd, (struct sockaddr*) &claddr, &len)) < 0) {
             perror("Error receiving on socket");
             break;
         }
-        if (recv(conn, buffer, 1024, 0) < 0) {
+        if (recv(conn, request_header, 1024, 0) < 0) {
             perror("Error receiving on socket");
             break;
         }
-        if (respond_with_file(conn, "server.c") < 0) {
+        struct MethodLine *ml = readmethodline(request_header);
+        printf("%s %s\n",  ml->Method, ml->URL);
+        if (respond_with_file(conn, ml->URL) < 0) {
+            respond_with_string(conn, "<html><body><h3>500 - Error<h3></body></html>");
             perror("Error sending on socket");
-            break;
         }
+        close(conn);
+        freemethodline(ml);
     }
 
     if (close(sockfd) != 0) {

@@ -91,24 +91,63 @@ int respond_with_file(int connfd, char* filename) {
     /* 18 is the length of "Content-Length:\n" */
     content_length = malloc((18 + numlength(filesize)) * sizeof(char));
     if (sprintf(content_length, "Content-Length:%d\n", (int)filesize-1) == -1) {
-        free(content_length);
-        free(content);
-        return -1;
+        goto out;
     }
     message_size += strlen(content_length);
     message = malloc(message_size * sizeof(char));
     if (sprintf(message, "%s%s\n%s", status, content_length, content) == -1) {
-        free(content_length);
-        free(content);
-        free(message);
-        return -1;
+        goto end;
+    }
+    if (send(connfd, message, strlen(message), 0) == -1) {
+        goto end;
+    }
+
+    free(content_length);
+    free(content);
+    free(message);
+    return 0;
+end:
+    free(message);
+out:
+    free(content_length);
+    free(content);
+    return -1;
+}
+
+int respond_with_string(int connfd, char *string) {
+    long message_size;
+    char *message;
+    char *status;
+    char *content_length;
+    off_t filesize;
+
+    message_size = 0;
+
+    status = "HTTP/1.1 200 OK\n";
+    message_size += strlen(status);
+
+    filesize = strlen(string);
+    message_size += filesize;
+    message_size += numlength(filesize);
+
+    /* 18 is the length of "Content-Length:\n" */
+    content_length = malloc((18 + numlength(filesize)) * sizeof(char));
+    if (sprintf(content_length, "Content-Length:%d\n", (int)filesize) == -1) {
+        goto end;
+    }
+    message_size += strlen(content_length);
+    message = malloc(message_size * sizeof(char));
+    if (sprintf(message, "%s%s\n%s", status, content_length, string) == -1) {
     }
 
     if (send(connfd, message, strlen(message), 0) == -1) {
-        free(content_length);
-        free(content);
-        free(message);
-        return -1;
+        goto out;
     }
     return 0;
+end:
+    free(message);
+out:
+    free(content_length);
+    return -1;
+
 }
