@@ -1,5 +1,5 @@
 all:
-	gcc -Wall -Wextra fileio.c server.c -o toyhttpd
+	gcc -Wall -Wextra request.c fileio.c server.c -o toyhttpd
 
 debug:
-	gcc -g -Wall -Wextra fileio.c server.c -o toyhttpd
+	gcc -g -Wall -Wextra request.c fileio.c server.c -o toyhttpd

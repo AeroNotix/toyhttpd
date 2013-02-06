@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "fileio.h"
+#include "request.h"
 
 int socketlisten(int port) {
     int sockfd;
