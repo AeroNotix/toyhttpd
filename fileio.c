@@ -144,9 +144,9 @@ int respond_with_string(int connfd, char *string) {
         goto out;
     }
     return 0;
-end:
-    free(message);
 out:
+    free(message);
+end:
     free(content_length);
     return -1;
 
