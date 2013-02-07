@@ -44,7 +44,7 @@ char *requesturl(char* message) {
 
     urlstart = message;
     while (*urlstart++ != ' ' && *urlstart != '\0');
-    urlend = ++urlstart;
+    urlend = urlstart;
     while (*urlend++ != ' ' && *urlend != '\0') {
         ++urllength;
     }

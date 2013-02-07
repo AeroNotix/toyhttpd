@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "fileio.h"
 
+
 int numlength(off_t num) {
     int x;
     while(num) {
@@ -45,25 +46,87 @@ char *readfile(char *filename) {
     return buffer;
 }
 
+void freedirlist(char **dirlist) {
+    char **dirp;
+    dirp = dirlist;
+    while (*dirlist) {
+        free(*dirlist++);
+    }
+    free(dirp);
+}
+
 char **listdir(char *dir) {
     DIR *dp;
     int length;
-    char **dirs;
+    char **dirs = NULL;
+    char **olddirs;
     struct dirent *ep;
 
     dp = opendir(dir);
-    if (dp != NULL) {
-        dirs = malloc(sizeof(char*));
-        length = 0;
-        while ((ep = readdir(dp))) {
-            dirs = realloc(dirs, sizeof(char*) * length + 1);
-            dirs[length++] = strdup(ep->d_name);
-        }
-        *(dirs + length) = NULL;
-        closedir(dp);
-        return dirs;
+    if (dp == NULL)
+        return NULL;
+
+    length = 1;
+    while ((ep = readdir(dp))) {
+        dirs = realloc(dirs, sizeof(char*) * length);
+        dirs[length-1] = strdup(ep->d_name);
+        ++length;
     }
-    return NULL;
+    olddirs = dirs;
+    dirs = realloc(dirs, sizeof(char*) * length);
+    if (dirs == NULL) {
+        freedirlist(olddirs);
+        return NULL;
+    }
+    dirs[length] = NULL;
+    closedir(dp);
+    return dirs;
+}
+
+char *generate_index(char *dir) {
+    char **dirnames = listdir(dir);
+    if (dirnames == NULL) {
+        return NULL;
+    }
+    char **dirnamesp = dirnames;
+    char *index;
+    char *indexp;
+    char *namebuffer;
+    int len, maxlen;
+
+    long charcount = 0;
+    int dirs = 0;
+    maxlen = 0;
+    while (*dirnames) {
+        ++dirs;
+        len = strlen(*dirnames++);
+        if (len > maxlen)
+            maxlen = len;
+        charcount += len;
+    }
+
+    index = malloc(sizeof(char) * charcount + (dirs * (30 + maxlen)));
+    namebuffer = malloc(sizeof(char) * (13 + maxlen));
+    indexp = index;
+    if (index == NULL) {
+        freedirlist(dirnamesp);
+        return NULL;
+    }
+    dirnames = dirnamesp;
+    while (*dirnames) {
+        len = strlen(*dirnames);
+        sprintf(namebuffer, "<a href=\"/%s\"/>", *dirnames);
+        memcpy(index, namebuffer, 13 + len);
+        index += (13 + len) ;
+        memcpy(index, *dirnames++, len);
+        index += len;
+        memcpy(index, "</a><br/>", 9);
+        index += 9;
+    }
+    *index = '\0';
+    freedirlist(dirnamesp);
+    free(namebuffer);
+    return indexp;
 }
 
 int respond_with_file(int connfd, char* filename) {
@@ -148,6 +211,52 @@ out:
     free(message);
 end:
     free(content_length);
+    return -1;
+}
+
+int respond_with_index(int connfd) {
+    long message_size;
+    char *message;
+    char *status;
+    char *content_length;
+    off_t filesize;
+    char *string = generate_index(".");
+    if (string == NULL) {
+        return respond_with_string(connfd, "Error - 500");
+    }
+
+    message_size = 0;
+
+    status = "HTTP/1.1 200 OK\n";
+    message_size += strlen(status);
+
+    filesize = strlen(string);
+    message_size += filesize;
+    message_size += numlength(filesize);
+
+    /* 18 is the length of "Content-Length:\n" */
+    content_length = malloc((18 + numlength(filesize)) * sizeof(char));
+    if (sprintf(content_length, "Content-Length:%d\n", (int)filesize) == -1) {
+        goto end;
+    }
+    message_size += strlen(content_length);
+    message = malloc(message_size * sizeof(char));
+    if (sprintf(message, "%s%s\n%s", status, content_length, string) == -1) {
+        goto out;
+    }
+
+    if (send(connfd, message, strlen(message), 0) == -1) {
+        goto out;
+    }
+    free(message);
+    free(content_length);
+    free(string);
+    return 0;
+out:
+    free(message);
+end:
+    free(content_length);
+    free(string);
     return -1;
 
 }

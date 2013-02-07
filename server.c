@@ -59,14 +59,24 @@ int main(void) {
             perror("Error receiving on socket");
             break;
         }
+
         struct MethodLine *ml = readmethodline(request_header);
-        printf("%s %s\n",  ml->Method, ml->URL);
-        if (respond_with_file(conn, ml->URL) < 0) {
-            respond_with_string(conn, "<html><body><h3>500 - Error<h3></body></html>");
-            perror("Error sending on socket");
+        printf("[INFO] %s %s\n",  ml->Method, ml->URL);
+
+        if (strcmp(ml->URL, "/") == 0) {
+            if (respond_with_index(conn) < 0) {
+                respond_with_string(conn, "<html><body><h3>500 - Error<h3></body></html>");
+            }
+        } else {
+            if (respond_with_file(conn, ml->URL+1) < 0) {
+                perror("Error sending on socket");
+                respond_with_string(conn, "<html><body><h3>500 - Error<h3></body></html>");
+            }
         }
+
         close(conn);
         freemethodline(ml);
+        continue;
     }
 
     if (close(sockfd) != 0) {
