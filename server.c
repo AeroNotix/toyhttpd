@@ -22,6 +22,7 @@ int main(void) {
     int sockfd, conn;
     socklen_t len;
     struct sockaddr_in6 claddr;
+    pthread_t t;
     char request_header[REQUEST_LENGTH];
 
     /* Bind to our HTTP socket */
@@ -48,7 +49,8 @@ int main(void) {
         struct Request *r = malloc(sizeof(struct Request));
         r->methodline = ml;
         r->connfd = conn;
-        handle_request(r);
+        pthread_create(&t, NULL, handle_request, r);
+        pthread_join(t, NULL);
     }
 
     if (close(sockfd) != 0) {
