@@ -11,7 +11,13 @@ struct MethodLine;
 struct MethodLine *readmethodline(char *request_header) {
     struct MethodLine *ml = malloc(sizeof(struct MethodLine));
     ml->Method = method(request_header);
+    if (ml->Method == NULL) {
+        ml->Method = strdup("");
+    }
     ml->URL = requesturl(request_header);
+    if (ml->URL == NULL) {
+        ml->URL = strdup("");
+    }
     return ml;
 }
 
@@ -29,7 +35,10 @@ char *method(char* message) {
      * 7 is the maximum METHOD length as per:
      * http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
      */
-    buffer = malloc(sizeof(char*) * 7);
+    buffer = malloc(sizeof(char) * 7);
+    if (buffer == NULL) {
+        return NULL;
+    }
     bufferptr = buffer;
     while(*message != ' ' && *message != '\0') {
         *buffer++ = *message++;
@@ -51,7 +60,10 @@ char *requesturl(char* message) {
         ++urllength;
     }
 
-    buffer = malloc(sizeof(char*) * (urllength + 1));
+    buffer = malloc(sizeof(char) * (urllength + 1));
+    if (buffer == NULL) {
+        return NULL;
+    }
     memcpy(buffer, urlstart, urllength);
     buffer[urllength] = '\0';
     return buffer;
