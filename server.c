@@ -45,26 +45,42 @@ int main(void) {
         }
 
         struct MethodLine *ml = readmethodline(request_header);
-        printf("[INFO] %s %s\n",  ml->Method, ml->URL);
-
-        if (strcmp(ml->URL, "/") == 0) {
-            if (respond_with_index(conn) < 0) {
-                respond_with_string(conn, "<html><body><h3>500 - Error<h3></body></html>");
-            }
-        } else {
-            if (respond_with_file(conn, ml->URL+1) < 0) {
-                perror("Error sending on socket");
-                respond_with_string(conn, "<html><body><h3>500 - Error<h3></body></html>");
-            }
-        }
-
-        close(conn);
-        freemethodline(ml);
-        continue;
+        struct Request *r = malloc(sizeof(struct Request));
+        r->methodline = ml;
+        r->connfd = conn;
+        handle_request(r);
     }
 
     if (close(sockfd) != 0) {
         perror("Error closing file");
     }
     return 0;
+}
+
+void log_request(struct Request *r) {
+    printf("[INFO] %s %s\n",  r->methodline->Method, r->methodline->URL);
+}
+
+void* handle_request(void* Request) {
+    struct Request *r = Request;
+    if (r == NULL) {
+        return NULL;
+    }
+    struct MethodLine *ml = r->methodline;
+    log_request(r);
+    if (strcmp(ml->URL, "/") == 0) {
+        if (respond_with_index(r->connfd) < 0) {
+            respond_with_string(r->connfd, "<html><body><h3>500 - Error<h3></body></html>");
+        }
+    } else {
+        if (respond_with_file(r->connfd, ml->URL+1) < 0) {
+            perror("Error sending on socket");
+            respond_with_string(r->connfd, "<html><body><h3>500 - Error<h3></body></html>");
+        }
+    }
+
+    freemethodline(ml);
+    close(r->connfd);
+    free(r);
+    return NULL;
 }
