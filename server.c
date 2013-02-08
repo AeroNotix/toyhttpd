@@ -11,34 +11,17 @@
 #include "fileio.h"
 #include "request.h"
 
-int socketlisten(int port) {
-    int sockfd;
-    struct sockaddr_in serv_addr;
+#ifndef REQUEST_LENGTH
+#define REQUEST_LENGTH 1024
+#endif
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        return -1;
-    }
-    int yes = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-    memset(&serv_addr, 0,sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(port);
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1) {
-        return -1;
-    }
-    if (listen(sockfd, 5) < 0) {
-        return -1;
-    }
-    return sockfd;
-}
+void* handle_request(void *Request);
 
 int main(void) {
     int sockfd, conn;
     socklen_t len;
     struct sockaddr_in6 claddr;
-    char request_header[1024];
+    char request_header[REQUEST_LENGTH];
 
     /* Bind to our HTTP socket */
     if ((sockfd = socketlisten( /* config */ 12345)) == -1) {
@@ -50,12 +33,12 @@ int main(void) {
     /* Server loop */
     while (1) {
         /* clear the buffer between requests */
-        memset(&request_header, 0, 1024);
+        memset(&request_header, 0, REQUEST_LENGTH);
         if ((conn = accept(sockfd, (struct sockaddr*) &claddr, &len)) < 0) {
             perror("Error receiving on socket");
             break;
         }
-        if (recv(conn, request_header, 1024, 0) < 0) {
+        if (recv(conn, request_header, REQUEST_LENGTH, 0) < 0) {
             perror("Error receiving on socket");
             break;
         }
