@@ -78,7 +78,7 @@ char **listdir(char *dir) {
         freedirlist(olddirs);
         return NULL;
     }
-    dirs[length] = NULL;
+    dirs[length-1] = NULL;
     closedir(dp);
     return dirs;
 }
