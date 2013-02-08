@@ -48,10 +48,10 @@ char *method(char* message) {
 }
 
 char *requesturl(char* message) {
-    int urllength;
+    int urllength = 0;
     char *urlstart;
     char *urlend;
-    char *buffer;
+    char *buffer = NULL;
 
     urlstart = message;
     while (*urlstart++ != ' ' && *urlstart != '\0');
