@@ -34,7 +34,7 @@ char *readfile(char *filename) {
 
     if ((filesize = fsize(filename)) == -1)
         return NULL;
-    buffer = malloc(sizeof(char) * filesize);
+    buffer = malloc(sizeof(char) * (filesize + 1));
     bufferp = buffer;
     if ((f = fopen(filename, "r")) == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
@@ -42,6 +42,7 @@ char *readfile(char *filename) {
     }
     while ((c = getc(f)) != EOF)
         *bufferp++ = c;
+    *bufferp = '\0';
     fclose(f);
     return buffer;
 }
