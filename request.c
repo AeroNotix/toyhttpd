@@ -22,9 +22,11 @@ struct MethodLine *readmethodline(char *request_header) {
 }
 
 void freemethodline(struct MethodLine *ml) {
-    free(ml->Method);
-    free(ml->URL);
-    free(ml);
+    if (ml != NULL) {
+        free(ml->Method);
+        free(ml->URL);
+        free(ml);
+    }
 }
 
 char *method(char* message) {
