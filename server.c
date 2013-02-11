@@ -113,7 +113,7 @@ void* handle_request(void* Request) {
         if (respond_with_404(r->connfd) < 0) {
             respond_with_500(r->connfd);
         }
-    } else  if (strcmp(ml->URL, "/") == 0) {
+    } else if (strcmp(ml->URL, "/") == 0) {
         if (respond_with_index(r->connfd) < 0) {
             respond_with_500(r->connfd);
         }
