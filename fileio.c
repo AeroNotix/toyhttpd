@@ -10,7 +10,7 @@
 
 
 int numlength(off_t num) {
-    int x;
+    int x = 0;
     while(num) {
         num /= 10;
         ++x;
