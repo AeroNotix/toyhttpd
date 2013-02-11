@@ -110,15 +110,19 @@ void* handle_request(void* Request) {
     }
     struct MethodLine *ml = r->methodline;
     log_request(r);
-    if (strcmp(ml->URL, "/") == 0) {
+    if (strcmp(ml->URL, "") == 0) {
+        if (respond_with_404(r->connfd) < 0) {
+            respond_with_500(r->connfd);
+        }
+    } else  if (strcmp(ml->URL, "/") == 0) {
         if (respond_with_index(r->connfd) < 0) {
-            respond_with_string(r->connfd, "<html><body><h3>500 - Error<h3></body></html>");
+            respond_with_500(r->connfd);
         }
     } else {
         if (respond_with_file(r->connfd, ml->URL+1) < 0) {
             perror("Error sending on socket");
             printf("%s\n", ml->URL+1);
-            respond_with_string(r->connfd, "<html><body><h3>500 - Error<h3></body></html>");
+            respond_with_500(r->connfd);
         }
     }
     freemethodline(ml);

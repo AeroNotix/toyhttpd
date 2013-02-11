@@ -15,5 +15,7 @@ void freedirlist(char **dirlist);
 int respond_with_file(int connfd, char *filename);
 int respond_with_string(int connfd, char *string);
 int respond_with_index(int connfd);
+int respond_with_404(int connfd);
+int respond_with_500(int connfd);
 
 #endif // __FILEIO_H

@@ -259,3 +259,11 @@ end:
     free(string);
     return -1;
 }
+
+int respond_with_404(int connfd) {
+    return respond_with_string(connfd, "<html><body><h3>400 - Not found<h3></body></html>");
+}
+
+int respond_with_500(int connfd) {
+    return respond_with_string(connfd, "<html><body><h3>500 - Error<h3></body></html>");
+}
