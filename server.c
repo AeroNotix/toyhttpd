@@ -26,9 +26,6 @@ struct sockaddr_in6 claddr[SERVER_THREADS];
 pthread_t server_threads[SERVER_THREADS];
 char request_header[SERVER_THREADS][REQUEST_LENGTH];
 
-void* handle_request(void *Request);
-void* server_loop(void* sargs);
-
 struct server_args {
     int sockfd;
     int server_id;
