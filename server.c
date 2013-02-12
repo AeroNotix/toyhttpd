@@ -11,7 +11,7 @@
 
 #include "fileio.h"
 #include "request.h"
-#include "server.c"
+#include "server.h"
 
 #ifndef SERVER_THREADS
 #define SERVER_THREADS 8
