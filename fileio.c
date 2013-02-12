@@ -116,8 +116,9 @@ char *generate_index(char *dir) {
         charcount += len;
     }
 
+    /* 30 == len(<a href="FILENAME"/>FILENAME</a><br/>) */
     index = malloc(sizeof(char) * charcount + (dirs * (30 + maxlen)));
-    namebuffer = malloc(sizeof(char) * (13 + maxlen));
+    namebuffer = malloc(sizeof(char) * (14 + maxlen));
     indexp = index;
     if (index == NULL) {
         freedirlist(dirnamesp);
@@ -127,7 +128,7 @@ char *generate_index(char *dir) {
     while (*dirnames) {
         len = strlen(*dirnames);
         sprintf(namebuffer, "<a href=\"/%s\"/>", *dirnames);
-        memcpy(index, namebuffer, 13 + len);
+        memcpy(index, namebuffer, 14 + len);
         index += (13 + len) ;
         memcpy(index, *dirnames++, len);
         index += len;

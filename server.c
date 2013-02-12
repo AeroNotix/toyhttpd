@@ -83,11 +83,9 @@ void* server_loop(void* sargs) {
         r->methodline = ml;
         r->connfd = conn;
         handle_request(r);
+        break;
     }
 
-    if (close(sockfd) != 0) {
-        perror("Error closing file");
-    }
     free((struct server_args*) sargs);
     return NULL;
 }
