@@ -194,10 +194,8 @@ int respond_with_string(int connfd, char *string) {
     message_size += filesize;
     message_size += numlength(filesize);
 
-    /* 18 is the length of "Content-Length:\n" */
-    content_length = malloc((18 + numlength(filesize)) * sizeof(char));
-    if (sprintf(content_length, "Content-Length:%d\n", (int)filesize) == -1) {
-        goto end;
+    if ((content_length = content_length_line(filesize)) == NULL) {
+        return -1;
     }
     message_size += strlen(content_length);
     message = malloc(message_size * sizeof(char));
@@ -235,11 +233,10 @@ int respond_with_index(int connfd) {
     message_size += filesize;
     message_size += numlength(filesize);
 
-    /* 18 is the length of "Content-Length:\n" */
-    content_length = malloc((18 + numlength(filesize)) * sizeof(char));
-    if (sprintf(content_length, "Content-Length:%d\n", (int)filesize) == -1) {
+    if ((content_length = content_length_line(filesize)) == NULL) {
         goto end;
     }
+
     message_size += strlen(content_length);
     message = malloc(message_size * sizeof(char));
     if (sprintf(message, "%s%s\n%s", status, content_length, string) == -1) {
@@ -255,10 +252,21 @@ int respond_with_index(int connfd) {
     return 0;
 out:
     free(message);
-end:
     free(content_length);
+end:
     free(string);
     return -1;
+}
+
+char *content_length_line(long number) {
+    char* content_length;
+    /* 18 is the length of "Content-Length:\n" */
+    content_length = malloc((18 + numlength(number)) * sizeof(char));
+    if (sprintf(content_length, "Content-Length:%d\n", (int) number) == -1) {
+        free(content_length);
+        return NULL;
+    }
+    return content_length;
 }
 
 int respond_with_404(int connfd) {
