@@ -11,6 +11,7 @@
 
 #include "fileio.h"
 #include "request.h"
+#include "server.c"
 
 #ifndef SERVER_THREADS
 #define SERVER_THREADS 8
@@ -24,17 +25,9 @@ socklen_t len[SERVER_THREADS];
 struct sockaddr_in6 claddr[SERVER_THREADS];
 pthread_t server_threads[SERVER_THREADS];
 char request_header[SERVER_THREADS][REQUEST_LENGTH];
-static pthread_mutex_t wmutex = PTHREAD_MUTEX_INITIALIZER;
 
 void* handle_request(void *Request);
 void* server_loop(void* sargs);
-int safe_accept(int socket,
-                struct sockaddr *address,
-                socklen_t *address_len);
-ssize_t safe_recv(int socket,
-                  void *buffer,
-                  size_t length,
-                  int flags);
 
 struct server_args {
     int sockfd;
@@ -120,7 +113,6 @@ void* handle_request(void* Request) {
     } else {
         if (respond_with_file(r->connfd, ml->URL+1) < 0) {
             perror("Error sending on socket");
-            printf("%s\n", ml->URL+1);
             respond_with_500(r->connfd);
         }
     }
@@ -128,22 +120,4 @@ void* handle_request(void* Request) {
     close(r->connfd);
     free(r);
     return NULL;
-}
-
-int safe_accept(int socket, struct sockaddr *address,
-                socklen_t *address_len) {
-    int conn;
-    pthread_mutex_lock(&wmutex);
-    conn = accept(socket, address, address_len);
-    pthread_mutex_unlock(&wmutex);
-    return conn;
-}
-
-ssize_t safe_recv(int socket,
-                  void *buffer,
-                  size_t length,
-                  int flags) {
-    ssize_t len;
-    len = recv(socket, buffer, length, flags);
-    return len;
 }

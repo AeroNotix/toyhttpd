@@ -3,10 +3,12 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #include "request.h"
 
 struct MethodLine;
+static pthread_mutex_t wmutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct MethodLine *readmethodline(char *request_header) {
     struct MethodLine *ml = malloc(sizeof(struct MethodLine));
@@ -67,6 +69,22 @@ char *requesturl(char* message) {
     memcpy(buffer, urlstart, urllength);
     buffer[urllength] = '\0';
     return buffer;
+}
+
+inline int safe_accept(int socket, struct sockaddr *address,
+                socklen_t *address_len) {
+    int conn;
+    pthread_mutex_lock(&wmutex);
+    conn = accept(socket, address, address_len);
+    pthread_mutex_unlock(&wmutex);
+    return conn;
+}
+
+inline ssize_t safe_recv(int socket, void *buffer,
+                  size_t length, int flags) {
+    ssize_t len;
+    len = recv(socket, buffer, length, flags);
+    return len;
 }
 
 int socketlisten(int port) {
