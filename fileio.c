@@ -200,6 +200,7 @@ int respond_with_string(int connfd, char *string) {
     message_size += strlen(content_length);
     message = malloc(message_size * sizeof(char));
     if (sprintf(message, "%s%s\n%s", status, content_length, string) == -1) {
+        goto out;
     }
 
     if (send(connfd, message, strlen(message), 0) == -1) {
