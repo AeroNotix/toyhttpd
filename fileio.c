@@ -131,6 +131,7 @@ char *generate_index(char *dir) {
 }
 
 int respond_with_file(int connfd, char* filename) {
+    int rval = 0;
     long message_size;
     char *message;
     char *status;
@@ -155,27 +156,26 @@ int respond_with_file(int connfd, char* filename) {
     /* 18 is the length of "Content-Length:\n" */
     content_length = malloc((18 + numlength(filesize)) * sizeof(char));
     if (sprintf(content_length, "Content-Length:%d\n", (int)filesize-1) == -1) {
+        rval = -1;
         goto out;
     }
     message_size += strlen(content_length);
     message = malloc(message_size * sizeof(char));
     if (sprintf(message, "%s%s\n%s", status, content_length, content) == -1) {
+        rval = -1;
         goto end;
     }
     if (send(connfd, message, strlen(message), 0) == -1) {
+        rval = -1;
         goto end;
     }
 
-    free(content_length);
-    free(content);
-    free(message);
-    return 0;
 end:
     free(message);
 out:
     free(content_length);
     free(content);
-    return -1;
+    return rval;
 }
 
 int respond_with_string(int connfd, char *string) {
@@ -214,6 +214,7 @@ out:
 }
 
 int respond_with_index(int connfd) {
+    int rval = 0;
     long message_size;
     char *message;
     char *status;
@@ -234,28 +235,27 @@ int respond_with_index(int connfd) {
     message_size += numlength(filesize);
 
     if ((content_length = content_length_line(filesize)) == NULL) {
+        rval = -1;
         goto end;
     }
 
     message_size += strlen(content_length);
     message = malloc(message_size * sizeof(char));
     if (sprintf(message, "%s%s\n%s", status, content_length, string) == -1) {
+        rval = -1;
         goto out;
     }
 
     if (send(connfd, message, strlen(message), 0) == -1) {
+        rval = -1;
         goto out;
     }
-    free(message);
-    free(content_length);
-    free(string);
-    return 0;
 out:
     free(message);
     free(content_length);
 end:
     free(string);
-    return -1;
+    return rval;
 }
 
 char *content_length_line(long number) {
