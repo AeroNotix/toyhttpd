@@ -209,7 +209,6 @@ int respond_with_string(int connfd, char *string) {
     return 0;
 out:
     free(message);
-end:
     free(content_length);
     return -1;
 }
@@ -222,7 +221,7 @@ int respond_with_index(int connfd) {
     off_t filesize;
     char *string = generate_index(".");
     if (string == NULL) {
-        return respond_with_string(connfd, "Error - 500");
+        return respond_with_500(connfd);
     }
 
     message_size = 0;
