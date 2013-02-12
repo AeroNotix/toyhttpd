@@ -85,6 +85,16 @@ char **listdir(char *dir) {
 }
 
 char *generate_index(char *dir) {
+    /*
+      Explanation for the magic numbers:
+
+      We create a list of <a> tags which are interpolated with the
+      filename twice so 30 is the number of characters which are
+      used minus the filename, to which we add the max filename
+      length to it and then multiply by the number of files. This
+      will give us a buffer of the precise length to hold all the
+      links.
+    */
     char **dirnames = listdir(dir);
     if (dirnames == NULL) {
         return NULL;
